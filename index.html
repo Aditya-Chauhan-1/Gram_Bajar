@@ -40,7 +40,6 @@
       content: ''; position: absolute; inset: -4px; border-radius: 9999px;
       background: rgba(16, 185, 129, 0.4); animation: pulse-ring 1.5s infinite;
     }
-    /* Chat UI Styles */
     #ai-chat-window { transition: all 0.3s ease; transform-origin: bottom right; }
     .chat-bubble-bot { background: #f3f4f6; border-radius: 12px 12px 12px 2px; border: 1px solid #e5e7eb; }
     .chat-bubble-user { background: #15803d; color: white; border-radius: 12px 12px 2px 12px; }
@@ -64,7 +63,6 @@
 
 <!-- AI CHATBOT UI -->
 <div id="ai-chat-window" class="fixed bottom-24 right-6 z-[9990] w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden hidden" style="max-height: 550px; height: 70vh;">
-  <!-- Header -->
   <div class="bg-gradient-to-r from-kisan-800 to-stone-900 p-3 flex items-center justify-between text-white shrink-0">
     <div class="flex items-center gap-2">
       <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -78,7 +76,6 @@
     <button onclick="toggleAIChat()" class="text-stone-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
   </div>
   
-  <!-- Chat Messages -->
   <div id="ai-chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 bg-stone-50 text-xs">
     <!-- Welcome Message -->
     <div class="flex items-start gap-2">
@@ -93,7 +90,6 @@
     </div>
   </div>
 
-  <!-- Input Area -->
   <div class="p-2 border-t border-stone-200 bg-white flex items-center gap-1.5 shrink-0">
     <button onclick="toggleVoiceAssistant()" id="ai-voice-btn" class="relative w-8 h-8 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center hover:bg-stone-200 transition">
       <i id="ai-voice-icon" class="fa-solid fa-microphone text-[11px]"></i>
@@ -1330,7 +1326,12 @@ function addChatMessage(sender, text, htmlContent = null) {
 
 function initSpeech() {
   if (!SpeechRecognition) {
-    console.warn("Speech Recognition not supported in this browser.");
+    // Fallback for browsers without Speech API
+    const text = prompt("Voice not supported. Type your command (e.g., 'Add wheat' or 'Show orders'):");
+    if (text) {
+      addChatMessage('user', text);
+      processVoiceIntent(text);
+    }
     return false;
   }
   recognition = new SpeechRecognition();
@@ -1353,7 +1354,12 @@ function initSpeech() {
   recognition.onerror = (event) => {
     console.error("Speech Error:", event.error);
     resetVoiceUI();
-    addChatMessage('bot', "Sorry, I couldn't hear that. Please try again or type.");
+    // Fallback if mic fails or permission denied
+    const text = prompt("Mic error. Please type your command:");
+    if (text) {
+      addChatMessage('user', text);
+      processVoiceIntent(text);
+    }
   };
 
   recognition.onend = () => {
@@ -1370,10 +1376,7 @@ function resetVoiceUI() {
 
 function toggleVoiceAssistant() {
   if (!recognition) {
-    if (!initSpeech()) {
-      showToast(currentLang === 'hi' ? "आपका ब्राउज़र वॉइस सपोर्ट नहीं करता।" : "Browser does not support voice.", "error");
-      return;
-    }
+    if (!initSpeech()) return;
   }
   if (isListening) {
     recognition.stop();
@@ -2823,6 +2826,7 @@ function renderSellerDashboard() {
               <option value="Packed" ${ord.status === 'Packed' ? 'selected' : ''}>Packed</option>
               <option value="Shipped" ${ord.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
               <option value="Delivered" ${ord.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="Cancelled" ${ord.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
             </select>
           </div>
         </div>
