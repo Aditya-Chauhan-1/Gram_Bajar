@@ -1215,6 +1215,20 @@ let filterBadge = '';
 let filterSearch = '';
 let filterSort = 'featured';
 
+/* ================= PHONE NORMALIZATION ================= */
+function normalizePhone(raw) {
+  if (!raw) return '';
+  const digits = String(raw).replace(/\D/g, '');
+  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(-10);
+  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(-10);
+  return digits.slice(-10);
+}
+
+function isValidPhone(raw) {
+  const p = normalizePhone(raw);
+  return /^[6-9]\d{9}$/.test(p);
+}
+
 /* ================= LANGUAGE ================= */
 function setLanguage(lang) {
   currentLang = lang;
@@ -1404,8 +1418,10 @@ function handleAuthLogin(e) {
   const requestedRole = document.querySelector('input[name="login-role"]:checked').value;
   const users = JsonDB.read(JSON_DB_KEYS.USERS);
 
+  const normalizedId = normalizePhone(identifier);
   const matchingCredentials = users.filter(user =>
-    (user.phone === identifier || (user.email || '').toLowerCase() === identifier.toLowerCase()) &&
+    ((user.phone && user.phone === normalizedId) || (user.phone && user.phone === identifier) ||
+     ((user.email || '').toLowerCase() === identifier.toLowerCase())) &&
     user.password === pass
   );
 
@@ -1447,11 +1463,17 @@ function handleAuthRegister(e) {
   const users = JsonDB.read(JSON_DB_KEYS.USERS);
   const role = document.querySelector('input[name="reg-role"]:checked').value;
   const name = document.getElementById('reg-name').value.trim();
-  const phone = document.getElementById('reg-phone').value.trim();
+  const rawPhone = document.getElementById('reg-phone').value.trim();
+  const phone = normalizePhone(rawPhone);
   const email = document.getElementById('reg-email').value.trim();
   const village = document.getElementById('reg-village').value.trim();
   const district = document.getElementById('reg-district').value.trim();
   const password = document.getElementById('reg-password').value;
+
+  if (!isValidPhone(phone)) {
+    showToast(currentLang === 'hi' ? "मान्य 10 अंकों का मोबाइल डालें।" : "Enter a valid 10-digit mobile.", "error");
+    return;
+  }
 
   if (users.some(u => u.phone === phone)) {
     showToast(currentLang === 'hi' ? "यह मोबाइल पहले से पंजीकृत है!" : "Mobile already registered!", "error");
@@ -1733,10 +1755,14 @@ function renderMarketProducts() {
     const desc = currentLang === 'hi' ? (prod.description_hi || prod.description_en) : (prod.description_en || prod.description_hi);
     const isPurchased = purchasedIds.has(prod.id);
 
+    const sellerPhone = normalizePhone(prod.sellerPhone || '');
+    const hasSellerPhone = /^[6-9]\d{9}$/.test(sellerPhone);
+
     const waMsg = encodeURIComponent(currentLang === 'hi'
       ? `नमस्ते ${prod.sellerName} जी, मैंने ग्राम बाज़ार पर आपका उत्पाद "${title}" देखा है।`
       : `Hello ${prod.sellerName}, I am contacting you regarding "${title}" on Gram Bajar.`);
-    const waLink = `https://wa.me/91${prod.sellerPhone}?text=${waMsg}`;
+    const waLink = hasSellerPhone ? `https://wa.me/91${sellerPhone}?text=${waMsg}` : '#';
+    const telLink = hasSellerPhone ? `tel:+91${sellerPhone}` : '#';
 
     return `
       <div class="bg-white rounded-3xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col group relative">
@@ -1762,7 +1788,10 @@ function renderMarketProducts() {
           <div>
             <div class="flex items-center justify-between text-[11px] text-stone-500 mb-1">
               <span class="truncate"><i class="fa-solid fa-location-dot text-rose-500 mr-1"></i>${prod.sellerVillage}</span>
-              <span class="font-bold text-stone-700">${prod.sellerName}</span>
+              <div class="text-right">
+                <span class="font-bold text-stone-700 block">${prod.sellerName}</span>
+                <span class="text-[9px] text-stone-400 block">+91 ${hasSellerPhone ? sellerPhone : 'N/A'}</span>
+              </div>
             </div>
             <h3 class="font-bold text-stone-900 text-sm leading-snug line-clamp-2 group-hover:text-kisan-700 transition">${title}</h3>
             <p class="text-stone-500 text-xs mt-1.5 line-clamp-2 leading-relaxed">${desc}</p>
@@ -1779,10 +1808,10 @@ function renderMarketProducts() {
               <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Direct Rate</span>
             </div>
             <div class="grid grid-cols-2 gap-2 mb-2">
-              <a href="tel:${prod.sellerPhone}" class="py-1 px-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1 transition">
+              <a href="${telLink}" ${hasSellerPhone ? '' : 'aria-disabled="true"'} class="py-1 px-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1 transition ${hasSellerPhone ? '' : 'opacity-40 pointer-events-none'}">
                 <i class="fa-solid fa-phone text-stone-500 text-[11px]"></i> ${currentLang === 'hi' ? 'कॉल' : 'Call'}
               </a>
-              <a href="${waLink}" target="_blank" class="py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1 transition">
+              <a href="${waLink}" ${hasSellerPhone ? 'target="_blank"' : 'aria-disabled="true"'} class="py-1 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1 transition ${hasSellerPhone ? '' : 'opacity-40 pointer-events-none'}" title="${hasSellerPhone ? 'Chat with seller' : 'Seller phone missing'}">
                 <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> WhatsApp
               </a>
             </div>
@@ -1824,7 +1853,7 @@ function handleQuickAddToCart(productId) {
   if (existing) existing.quantity = newQty;
   else cart.push({
     id: prod.id, title_en: prod.title_en, title_hi: prod.title_hi,
-    sellerId: prod.sellerId, sellerName: prod.sellerName, sellerPhone: prod.sellerPhone,
+    sellerId: prod.sellerId, sellerName: prod.sellerName, sellerPhone: normalizePhone(prod.sellerPhone || ''),
     price: prod.price, unit: prod.unit, image: prod.image, quantity: minQty
   });
 
@@ -1957,9 +1986,14 @@ function handleOrderSubmission(e) {
 
   const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
   const buyerName = document.getElementById('chk-buyer-name').value.trim();
-  const buyerPhone = document.getElementById('chk-buyer-phone').value.trim();
+  const buyerPhone = normalizePhone(document.getElementById('chk-buyer-phone').value.trim());
   const buyerAddress = document.getElementById('chk-buyer-address').value.trim();
   const paymentMethod = document.querySelector('input[name="chk-pay-type"]:checked').value;
+
+  if (!isValidPhone(buyerPhone)) {
+    showToast(currentLang === 'hi' ? "मान्य मोबाइल नंबर डालें।" : "Enter a valid mobile number.", "error");
+    return;
+  }
 
   const validated = [];
   for (const ci of cart) {
@@ -1972,7 +2006,7 @@ function handleOrderSubmission(e) {
     }
     validated.push({
       id: p.id, title_en: p.title_en, title_hi: p.title_hi,
-      sellerId: p.sellerId, sellerName: p.sellerName, sellerPhone: p.sellerPhone,
+      sellerId: p.sellerId, sellerName: p.sellerName, sellerPhone: normalizePhone(p.sellerPhone || ''),
       price: p.price, unit: p.unit, image: p.image, quantity: ci.quantity
     });
   }
@@ -2026,8 +2060,73 @@ function handleOrderSubmission(e) {
 
   updateMyOrdersNavBadge();
   renderMarketProducts();
+
+  // Build per-seller WhatsApp notification panel
+  const sellerMessages = new Map();
+  newOrders.forEach(ord => {
+    const phone = normalizePhone(ord.sellerPhone || '');
+    if (!/^[6-9]\d{9}$/.test(phone)) return;
+    const lines = ord.items.map(it =>
+      `• ${currentLang === 'hi' ? (it.title_hi || it.title_en) : (it.title_en || it.title_hi)} — ${it.quantity} ${it.unit} — ₹${it.price * it.quantity}`
+    ).join('\n');
+    const msg = currentLang === 'hi'
+      ? `नमस्ते ${ord.sellerName} जी,\nनया ऑर्डर मिला (${ord.id}):\n${lines}\nकुल: ₹${ord.totalAmount}\nभुगतान: ${ord.paymentMethod}\nग्राहक: ${ord.buyerName} (${ord.buyerPhone})\nपता: ${ord.deliveryAddress}`
+      : `Hello ${ord.sellerName},\nNew order received (${ord.id}):\n${lines}\nTotal: ₹${ord.totalAmount}\nPayment: ${ord.paymentMethod}\nCustomer: ${ord.buyerName} (${ord.buyerPhone})\nAddress: ${ord.deliveryAddress}`;
+    sellerMessages.set(phone, { name: ord.sellerName, msg, orderId: ord.id });
+  });
+
   navigateTo('customer-orders');
   showInvoiceModal(newOrders[0]);
+
+  if (sellerMessages.size > 0) {
+    showSellerNotifyPanel(sellerMessages);
+  }
+}
+
+/* ================= SELLER NOTIFY PANEL (multi-seller WhatsApp) ================= */
+function showSellerNotifyPanel(sellerMap) {
+  // Remove any stale panel first
+  document.querySelectorAll('.seller-notify-panel').forEach(el => el.remove());
+
+  const panel = document.createElement('div');
+  panel.className = 'seller-notify-panel fixed bottom-5 left-5 z-[9998] bg-white border border-stone-200 rounded-2xl shadow-2xl p-3 w-[22rem] max-w-[calc(100vw-2.5rem)] max-h-[70vh] overflow-y-auto';
+  panel.innerHTML = `
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-xs font-black text-stone-900 flex items-center gap-1.5">
+        <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+        ${currentLang === 'hi' ? 'किसानों को सूचित करें' : 'Notify Sellers'}
+      </div>
+      <button onclick="this.closest('.seller-notify-panel').remove()" class="text-stone-400 hover:text-stone-700 text-sm" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <p class="text-[10px] text-stone-500 mb-2">
+      ${currentLang === 'hi'
+        ? 'प्रत्येक किसान को उनका ऑर्डर भेजें। ब्राउज़र सुरक्षा के कारण हर बटन अलग से दबाएँ।'
+        : 'Send each seller their order. Browsers block multi-tab opens, so click each button.'}
+    </p>
+    <div class="space-y-2">
+      ${[...sellerMap.entries()].map(([phone, {name, msg, orderId}]) => `
+        <div class="bg-stone-50 border border-stone-200 rounded-xl p-2.5">
+          <div class="text-[11px] font-bold text-stone-800 flex items-center justify-between mb-1">
+            <span><i class="fa-solid fa-user text-stone-400 mr-1"></i>${name}</span>
+            <span class="text-stone-400 font-normal">+91 ${phone}</span>
+          </div>
+          <div class="text-[10px] text-stone-500 mb-1.5">${orderId}</div>
+          <a href="https://wa.me/91${phone}?text=${encodeURIComponent(msg)}"
+             target="_blank"
+             class="block text-center py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg transition">
+            <i class="fa-brands fa-whatsapp mr-1"></i>
+            ${currentLang === 'hi' ? 'व्हाट्सएप भेजें' : 'Send on WhatsApp'}
+          </a>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  // Auto-dismiss after 2 minutes
+  setTimeout(() => { if (panel.parentNode) panel.remove(); }, 120000);
 }
 
 /* ================= CUSTOMER ORDERS ================= */
@@ -2121,8 +2220,10 @@ function renderCustomerOrders() {
         <div class="py-4 space-y-3">
           ${order.items.map(it => {
             const itemTitle = currentLang === 'hi' ? (it.title_hi || it.title_en) : (it.title_en || it.title_hi);
+            const itemPhone = normalizePhone(it.sellerPhone || '');
+            const hasPhone = /^[6-9]\d{9}$/.test(itemPhone);
             const waMsg = encodeURIComponent(`Order ${order.id} — ${itemTitle}`);
-            const waUrl = `https://wa.me/91${it.sellerPhone}?text=${waMsg}`;
+            const waUrl = hasPhone ? `https://wa.me/91${itemPhone}?text=${waMsg}` : '#';
             return `
               <div class="flex items-center justify-between flex-wrap gap-3 bg-stone-50 p-3 rounded-2xl border border-stone-100">
                 <div class="flex items-center gap-3">
@@ -2131,13 +2232,14 @@ function renderCustomerOrders() {
                     <h4 class="text-xs font-bold text-stone-900 leading-tight">${itemTitle}</h4>
                     <p class="text-[11px] text-stone-500 mt-0.5">
                       ${it.sellerName} • ₹${it.price}/${it.unit}
+                      ${hasPhone ? `<span class="text-stone-400"> • +91 ${itemPhone}</span>` : ''}
                     </p>
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
                   <span class="text-xs font-bold text-stone-600">Qty: ${it.quantity} ${it.unit}</span>
                   <span class="text-sm font-black text-kisan-800">₹${it.price * it.quantity}</span>
-                  <a href="${waUrl}" target="_blank" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-[11px] font-bold rounded-lg transition flex items-center gap-1">
+                  <a href="${waUrl}" ${hasPhone ? 'target="_blank"' : 'aria-disabled="true"'} class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-[11px] font-bold rounded-lg transition flex items-center gap-1 ${hasPhone ? '' : 'opacity-40 pointer-events-none'}">
                     <i class="fa-brands fa-whatsapp"></i>
                   </a>
                 </div>
@@ -2183,8 +2285,11 @@ function handleOrderAgain(items) {
 /* ================= SELLER DASHBOARD ================= */
 function orderBelongsToSeller(order, seller) {
   if (order.sellerId) return order.sellerId === seller.id;
-  if (order.sellerPhone) return order.sellerPhone === seller.phone;
-  return order.items.some(it => it.sellerId === seller.id || it.sellerPhone === seller.phone);
+  if (order.sellerPhone) return normalizePhone(order.sellerPhone) === normalizePhone(seller.phone);
+  return order.items.some(it =>
+    it.sellerId === seller.id ||
+    normalizePhone(it.sellerPhone || '') === normalizePhone(seller.phone)
+  );
 }
 
 function renderSellerDashboard() {
@@ -2198,7 +2303,10 @@ function renderSellerDashboard() {
   const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
   const orders = JsonDB.read(JSON_DB_KEYS.ORDERS);
 
-  const myProducts = products.filter(p => p.sellerId === currentUser.id || p.sellerPhone === currentUser.phone);
+  const myProducts = products.filter(p =>
+    p.sellerId === currentUser.id ||
+    normalizePhone(p.sellerPhone || '') === normalizePhone(currentUser.phone)
+  );
   const myOrders = orders.filter(order => orderBelongsToSeller(order, currentUser));
 
   let pendingCount = 0;
@@ -2206,7 +2314,10 @@ function renderSellerDashboard() {
   myOrders.forEach(o => {
     if (o.status === 'Confirmed' || o.status === 'Packed') pendingCount++;
     o.items
-      .filter(it => it.sellerId === currentUser.id || it.sellerPhone === currentUser.phone)
+      .filter(it =>
+        it.sellerId === currentUser.id ||
+        normalizePhone(it.sellerPhone || '') === normalizePhone(currentUser.phone)
+      )
       .forEach(it => grossRevenue += it.price * it.quantity);
   });
 
@@ -2221,7 +2332,10 @@ function renderSellerDashboard() {
     ordersContainer.innerHTML = `<div class="text-center py-6 text-stone-400 text-xs">${currentLang === 'hi' ? 'अभी कोई ऑर्डर नहीं।' : 'No orders yet.'}</div>`;
   } else {
     ordersContainer.innerHTML = myOrders.map(ord => {
-      const sellerItems = ord.items.filter(it => it.sellerId === currentUser.id || it.sellerPhone === currentUser.phone);
+      const sellerItems = ord.items.filter(it =>
+        it.sellerId === currentUser.id ||
+        normalizePhone(it.sellerPhone || '') === normalizePhone(currentUser.phone)
+      );
       const sellerTotal = sellerItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
       return `
         <div class="p-4 bg-stone-50 rounded-2xl border border-stone-200 flex flex-col md:flex-row md:items-center justify-between text-xs gap-3">
@@ -2358,20 +2472,26 @@ function handleProductSave(e) {
   const desc = document.getElementById('crud-desc').value.trim();
   const organic = document.getElementById('crud-organic-check').checked;
 
+  const sellerPhone = normalizePhone(currentUser.phone || '');
+  if (!isValidPhone(sellerPhone)) {
+    showToast(currentLang === 'hi' ? "आपके खाते में मान्य मोबाइल नहीं है।" : "Your account has no valid mobile number.", "error");
+    return;
+  }
+
   if (editId) {
     const idx = products.findIndex(p => p.id === parseInt(editId));
     if (idx !== -1) {
       Object.assign(products[idx], {
         title_en: title, title_hi: title, category, unit, price, minOrder, stock,
         image, description_en: desc, description_hi: desc, organic,
-        inStock: stock > 0
+        sellerPhone, inStock: stock > 0
       });
       showToast(currentLang === 'hi' ? "उत्पाद अपडेट हुआ!" : "Product updated!");
     }
   } else {
     products.unshift({
       id: Date.now(),
-      sellerId: currentUser.id, sellerName: currentUser.name, sellerPhone: currentUser.phone,
+      sellerId: currentUser.id, sellerName: currentUser.name, sellerPhone,
       sellerVillage: `${currentUser.village} (${currentUser.district})`, district: currentUser.district,
       title_en: title, title_hi: title, category, price, unit, minOrder, stock,
       description_en: desc, description_hi: desc, image,
@@ -2390,7 +2510,8 @@ function editProductModal(id) {
   const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
   const p = products.find(prod => prod.id === id);
   if (!p || !currentUser) return;
-  if (p.sellerId !== currentUser.id) return;
+  if (p.sellerId !== currentUser.id &&
+      normalizePhone(p.sellerPhone || '') !== normalizePhone(currentUser.phone)) return;
 
   document.getElementById('crud-product-id').value = p.id;
   document.getElementById('crud-title').value = p.title_en || p.title_hi;
@@ -2410,7 +2531,9 @@ function editProductModal(id) {
 function toggleStockAvailability(id) {
   const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
   const p = products.find(prod => prod.id === id);
-  if (p && currentUser && p.sellerId === currentUser.id) {
+  if (p && currentUser &&
+      (p.sellerId === currentUser.id ||
+       normalizePhone(p.sellerPhone || '') === normalizePhone(currentUser.phone))) {
     p.inStock = !p.inStock;
     JsonDB.write(JSON_DB_KEYS.PRODUCTS, products);
     renderSellerDashboard();
