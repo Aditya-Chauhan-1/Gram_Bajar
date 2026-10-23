@@ -2415,11 +2415,17 @@ function renderSellerDashboard() {
 
 function updateOrderStatus(orderId, newStatus) {
   if (!currentUser || currentUser.role !== 'seller') return;
+  
+  // 1. Instantly update the local cache
   const orders = JsonDB.read(JSON_DB_KEYS.ORDERS);
   const order = orders.find(o => o.id === orderId);
   if (order && orderBelongsToSeller(order, currentUser)) {
     order.status = newStatus;
+    
+    // 2. Write to cloud (this triggers the background save)
     JsonDB.write(JSON_DB_KEYS.ORDERS, orders);
+    
+    // 3. Update the UI instantly for the seller
     showToast(currentLang === 'hi' ? `ऑर्डर ${orderId} → ${newStatus}` : `Order ${orderId} → ${newStatus}`);
     renderSellerDashboard();
   }
@@ -2702,17 +2708,39 @@ window.onload = async function() {
   }
 };
 
-// Optional: Auto-refresh data from cloud every 30 seconds to see other device updates
+// =========================================================
+// LIVE SYNC ENGINE (Pulls latest status from sellers)
+// =========================================================
 setInterval(async () => {
-  if (document.hidden) return; // pause if tab not active
-  await cloudLoad();
-  // Only update UI if we're on orders page to avoid disrupting
-  if (!document.getElementById('view-customer-orders').classList.contains('hidden')) {
-    renderCustomerOrders();
+  if (document.hidden) return; // Pause if tab is not active
+  
+  const ok = await cloudLoad();
+  if (!ok) return;
+
+  // 1. Check for Status Updates
+  const orders = JsonDB.read(JSON_DB_KEYS.ORDERS);
+  
+  if (currentUser && currentUser.role === 'customer') {
+    const myOrders = orders.filter(o => o.buyerId === currentUser.id || o.buyerPhone === currentUser.phone);
+    const activeDelivered = myOrders.filter(o => o.status === 'Delivered').length;
+    const currentDeliveredUI = parseInt(document.getElementById('cust-stat-delivered-orders')?.textContent || '0');
+    
+    // If counts mismatch or we are on orders page, force a re-render
+    if (!document.getElementById('view-customer-orders').classList.contains('hidden') || activeDelivered !== currentDeliveredUI) {
+      renderCustomerOrders(); 
+    }
+    updateMyOrdersNavBadge();
   }
+
+  if (currentUser && currentUser.role === 'seller') {
+    if (!document.getElementById('view-seller-portal').classList.contains('hidden')) {
+      renderSellerDashboard();
+    }
+  }
+
   renderMarketProducts();
-  updateMyOrdersNavBadge();
-}, 30000);
+  
+}, 15000); // Syncs every 15 seconds
 </script>
 </body>
 </html>
