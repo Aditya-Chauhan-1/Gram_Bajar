@@ -369,7 +369,7 @@
       <div class="space-y-2">
         <div class="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs px-3 py-1 rounded-full font-bold">
           <i class="fa-solid fa-shield-halved"></i>
-          <span data-i18n="seller_banner_badge">Verified Kisan & Artisan Desk</span>
+          <span data-i18n="seller_banner_badge">Verified Seller & Artisan Desk</span>
         </div>
         <h2 id="seller-profile-name" class="text-2xl sm:text-3xl font-black text-amber-100">Welcome!</h2>
         <p id="seller-profile-loc" class="text-xs text-stone-300"></p>
@@ -545,7 +545,7 @@
       </div>
     </div>
     <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-stone-500 gap-3">
-      <div>© 2026 Gram Bajar • Customer & Farmer Platform</div>
+      <div>© 2026 Gram Bajar • Customer & Seller Platform</div>
       <div class="flex gap-4">
         <span data-i18n="terms_cond">Terms</span>
         <span data-i18n="privacy_policy">Privacy</span>
@@ -594,7 +594,7 @@
           <label id="login-role-card-seller" class="border border-stone-200 p-2.5 rounded-xl cursor-pointer flex items-center justify-center gap-2">
             <input type="radio" name="login-role" value="seller" onchange="handleLoginRoleChange('seller')" class="sr-only">
             <i class="fa-solid fa-tractor text-stone-600"></i>
-            <span class="font-bold text-stone-800" data-i18n="role_farmer_opt">Farmer</span>
+            <span class="font-bold text-stone-800" data-i18n="role_farmer_opt">Seller</span>
           </label>
         </div>
       </fieldset>
@@ -638,7 +638,7 @@
           <label class="border border-stone-200 p-2.5 rounded-xl cursor-pointer flex flex-col items-center text-center" id="role-card-farmer">
             <input type="radio" name="reg-role" value="seller" onchange="handleRoleRadioChange('seller')" class="hidden">
             <i class="fa-solid fa-tractor text-stone-600 text-lg mb-1"></i>
-            <span class="font-black text-stone-800" data-i18n="role_farmer_opt">Farmer</span>
+            <span class="font-black text-stone-800" data-i18n="role_farmer_opt">Seller</span>
             <span class="text-[10px] text-stone-500" data-i18n="role_farmer_sub">Sell Crops</span>
           </label>
         </div>
@@ -846,7 +846,7 @@
           <i class="fa-solid fa-shield-check"></i>
         </div>
         <div>
-          <h3 class="font-bold text-base" data-i18n="checkout_title">Direct Farmer Settlement</h3>
+          <h3 class="font-bold text-base" data-i18n="checkout_title">Direct Seller Settlement</h3>
           <p class="text-[11px] text-stone-300" data-i18n="checkout_sub">100% Direct Remittance</p>
         </div>
       </div>
@@ -960,7 +960,7 @@
           <thead class="text-stone-400 border-b border-stone-200 pb-2 text-[10px] uppercase">
             <tr>
               <th class="py-2" data-i18n="tbl_item">Item</th>
-              <th class="py-2" data-i18n="tbl_producer">Producer</th>
+              <th class="py-2" data-i18n="tbl_producer">Seller</th>
               <th class="py-2 text-center" data-i18n="tbl_qty">Qty</th>
               <th class="py-2 text-right" data-i18n="tbl_amount">Amount</th>
             </tr>
@@ -975,7 +975,7 @@
       </div>
 
       <div class="mt-4 p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-center text-[10px] text-amber-900" data-i18n="inv_thankyou_note">
-        🌾 Thank you for supporting village farmers directly!
+        🌾 Thank you for supporting village sellers directly!
       </div>
     </div>
 
@@ -1025,7 +1025,7 @@ const i18n = {
     customer_orders_subtitle:"Review purchases and track dispatch.",
     continue_shopping:"Continue Shopping", stat_total_orders:"Total Orders",
     stat_in_transit:"In Transit", stat_delivered:"Delivered", stat_money_saved:"Direct",
-    seller_banner_badge:"Verified Kisan & Artisan Desk", add_new_product_btn:"List New Crop",
+    seller_banner_badge:"Verified Seller & Artisan Desk", add_new_product_btn:"List New Crop",
     view_market_btn:"View Market", stat_active_products:"Active Products", stat_published:"● Available",
     stat_gross_revenue:"Gross Sales", stat_zero_comm:"100% Direct Remittance",
     stat_direct_leads:"Inquiries", stat_connected:"Direct Contact",
@@ -1047,7 +1047,7 @@ const i18n = {
     auth_modal_title:"Gram Bajar Access", auth_modal_sub:"Sign in or create an account",
     tab_login:"Sign In", tab_register:"Create Account",
     lbl_identifier:"Mobile or Email", lbl_password:"Password", btn_login_submit:"Sign In",
-    lbl_select_role:"Select Role *", role_farmer_opt:"Farmer", role_farmer_sub:"Sell Crops",
+    lbl_select_role:"Select Role *", role_farmer_opt:"Seller", role_farmer_sub:"Sell Crops",
     role_buyer_opt:"Customer", role_buyer_sub:"Buy Direct",
     lbl_fullname:"Full Name *", lbl_mobile:"Mobile *", lbl_email:"Email (Optional)",
     lbl_village:"Village *", lbl_district:"District *", lbl_create_pass:"Password *",
@@ -1057,7 +1057,7 @@ const i18n = {
     preset_images:"Presets:", lbl_description:"Description *",
     lbl_organic_cert:"100% Organic Guarantee", btn_cancel:"Cancel", btn_save_publish:"Save & Publish",
     cart_title:"Your Cart", cart_subtotal:"Subtotal:", cart_delivery:"Logistics:", cart_total:"Total:",
-    btn_proceed_checkout:"Checkout", checkout_title:"Direct Farmer Settlement",
+    btn_proceed_checkout:"Checkout", checkout_title:"Direct Seller Settlement",
     checkout_sub:"100% Direct Remittance", lbl_chk_name:"Recipient Name *",
     lbl_chk_phone:"Mobile *", lbl_chk_pincode:"Pincode *", lbl_chk_address:"Address *",
     lbl_pay_method:"Payment Mode *", pay_cod:"COD", pay_cod_sub:"On Receipt",
@@ -1065,9 +1065,9 @@ const i18n = {
     upi_scan_hint:"Scan with any UPI App.", total_payable:"Total:",
     btn_confirm_order:"Confirm Order", inv_header_subtitle:"Direct Producer Invoice",
     inv_billed_to:"Billed To:", inv_payment_status:"Payment:", tbl_status:"Status",
-    inv_guarantee:"100% Zero-Middlemen", tbl_item:"Item", tbl_producer:"Producer",
+    inv_guarantee:"100% Zero-Middlemen", tbl_item:"Item", tbl_producer:"Seller",
     tbl_qty:"Qty", tbl_amount:"Amount", inv_net_total:"Net Amount:",
-    inv_thankyou_note:"🌾 Thank you for supporting farmers!", btn_print_invoice:"Print",
+    inv_thankyou_note:"🌾 Thank you for supporting sellers!", btn_print_invoice:"Print",
     btn_close:"Close", cat_all:"All", cat_grains:"Grains", cat_dairy:"Ghee & Honey",
     cat_vegetables:"Vegetables", cat_fruits:"Fruits", cat_handicrafts:"Handicrafts",
     cat_bamboo:"Bamboo", cat_pottery:"Pottery", cat_other:"Other"
@@ -1075,12 +1075,12 @@ const i18n = {
   hi: {
     app_tagline:"गाँव की सीधी उपज, शुद्ध घी व हस्तशिल्प",
     mandi_ticker_title:"आज का मंडी भाव:", tag_pure_farmer:"100% सीधा भुगतान",
-    nav_mandi_rates:"मंडी भाव", nav_seller_portal:"किसान डेस्क", nav_buyer_market:"बाज़ार",
+    nav_mandi_rates:"मंडी भाव", nav_seller_portal:"विक्रेता डेस्क", nav_buyer_market:"बाज़ार",
     nav_my_orders:"मेरे ऑर्डर्स", nav_login_btn:"लॉगिन / खाता", lbl_login_role:"किस रूप में लॉगिन करें",
     login_as_customer:"यह ग्राहक खाता है। ग्राहक चुनें।",
     login_as_seller:"यह विक्रेता खाता है। विक्रेता चुनें।",
     hero_badge:"100% शुद्ध उपज • शून्य बिचौलिया", hero_title_1:"खेतों की सोंधी खुशबू,",
-    hero_title_2:"सीधे गाँव से रसोई तक।", hero_subtitle:"सीधे किसानों से शुद्ध उपज खरीदें।",
+    hero_title_2:"सीधे गाँव से रसोई तक।", hero_subtitle:"सीधे विक्रेताओं से शुद्ध उपज खरीदें।",
     all_regions:"सभी जिले", all_certifications:"सभी प्रमाणन",
     filter_organic:"100% जैविक", filter_gi_tag:"जीआई टैग", filter_shg:"महिला SHG",
     explore_harvest:"उपज देखें", badge_purchased_hero:"पिछले ऑर्डर में",
@@ -1094,10 +1094,10 @@ const i18n = {
     customer_orders_title:"मेरे ऑर्डर्स", customer_orders_subtitle:"खरीदारी देखें व ट्रैक करें।",
     continue_shopping:"और खरीदें", stat_total_orders:"कुल", stat_in_transit:"रास्ते में",
     stat_delivered:"डिलीवर", stat_money_saved:"सीधा",
-    seller_banner_badge:"किसान कंट्रोल डेस्क", add_new_product_btn:"उत्पाद जोड़ें",
+    seller_banner_badge:"विक्रेता कंट्रोल डेस्क", add_new_product_btn:"उत्पाद जोड़ें",
     view_market_btn:"बाज़ार देखें", stat_active_products:"सक्रिय उत्पाद",
     stat_published:"● उपलब्ध", stat_gross_revenue:"कुल बिक्री",
-    stat_zero_comm:"100% सीधे किसान को", stat_direct_leads:"संपर्क", stat_connected:"सीधा संपर्क",
+    stat_zero_comm:"100% सीधे विक्रेता को", stat_direct_leads:"संपर्क", stat_connected:"सीधा संपर्क",
     seller_orders_heading:"प्राप्त ऑर्डर्स", seller_orders_desc:"स्थिति अपडेट करें।",
     seller_inventory_heading:"मेरा स्टॉक", seller_inventory_desc:"मूल्य व स्टॉक बदलें।",
     tbl_product:"उत्पाद", tbl_category:"श्रेणी", tbl_price:"मूल्य (₹)",
@@ -1106,7 +1106,7 @@ const i18n = {
     mandi_page_title:"दैनिक मंडी भाव", mandi_page_subtitle:"APMC बेंचमार्क।",
     mandi_col_commodity:"जिंस", mandi_col_market:"मंडी", mandi_col_min:"न्यूनतम",
     mandi_col_max:"अधिकतम", mandi_col_modal:"मॉडल", mandi_col_trend:"रुझान",
-    footer_desc:"किसानों और ग्राहकों को जोड़ने वाला बाज़ार।",
+    footer_desc:"विक्रेताओं और ग्राहकों को जोड़ने वाला बाज़ार।",
     footer_motto:"🌾 सशक्त ग्रामीण भारत", footer_quick_links:"त्वरित नेविगेशन",
     footer_trust_title:"पारदर्शिता", trust_1:"शून्य बिचौलिया", trust_2:"सीधा UPI",
     trust_3:"FSSAI प्रमाणित", trust_4:"टैक्स-फ्री बिल",
@@ -1115,7 +1115,7 @@ const i18n = {
     auth_modal_title:"ग्राम बाज़ार प्रवेश", auth_modal_sub:"लॉगिन या खाता बनाएं",
     tab_login:"लॉगिन", tab_register:"पंजीकरण",
     lbl_identifier:"मोबाइल / ईमेल", lbl_password:"पासवर्ड", btn_login_submit:"लॉगिन करें",
-    lbl_select_role:"खाता प्रकार *", role_farmer_opt:"किसान", role_farmer_sub:"फसल बेचें",
+    lbl_select_role:"खाता प्रकार *", role_farmer_opt:"विक्रेता", role_farmer_sub:"फसल बेचें",
     role_buyer_opt:"ग्राहक", role_buyer_sub:"सीधे खरीदें",
     lbl_fullname:"पूरा नाम *", lbl_mobile:"मोबाइल *", lbl_email:"ईमेल (वैकल्पिक)",
     lbl_village:"गाँव *", lbl_district:"जिला *", lbl_create_pass:"पासवर्ड *",
@@ -1125,17 +1125,17 @@ const i18n = {
     preset_images:"नमूने:", lbl_description:"विवरण *",
     lbl_organic_cert:"100% जैविक गारंटी", btn_cancel:"रद्द", btn_save_publish:"सहेजें",
     cart_title:"आपकी टोकरी", cart_subtotal:"उपज मूल्य:", cart_delivery:"परिवहन:", cart_total:"कुल:",
-    btn_proceed_checkout:"चेकआउट", checkout_title:"सीधा किसान भुगतान",
-    checkout_sub:"100% सीधे किसान को", lbl_chk_name:"प्राप्तकर्ता *",
+    btn_proceed_checkout:"चेकआउट", checkout_title:"सीधा विक्रेता भुगतान",
+    checkout_sub:"100% सीधे विक्रेता को", lbl_chk_name:"प्राप्तकर्ता *",
     lbl_chk_phone:"मोबाइल *", lbl_chk_pincode:"पिनकोड *", lbl_chk_address:"पता *",
     lbl_pay_method:"भुगतान *", pay_cod:"COD", pay_cod_sub:"डिलीवरी पर",
     pay_upi:"UPI", pay_upi_sub:"QR स्कैन", pay_bank:"बैंक", pay_bank_sub:"NEFT",
     upi_scan_hint:"UPI ऐप से स्कैन करें।", total_payable:"कुल:",
-    btn_confirm_order:"ऑर्डर करें", inv_header_subtitle:"सीधा किसान बीजक",
+    btn_confirm_order:"ऑर्डर करें", inv_header_subtitle:"सीधा विक्रेता बीजक",
     inv_billed_to:"ग्राहक:", inv_payment_status:"भुगतान:", tbl_status:"स्थिति",
-    inv_guarantee:"100% शून्य बिचौलिया", tbl_item:"उत्पाद", tbl_producer:"किसान",
+    inv_guarantee:"100% शून्य बिचौलिया", tbl_item:"उत्पाद", tbl_producer:"विक्रेता",
     tbl_qty:"मात्रा", tbl_amount:"राशि", inv_net_total:"कुल राशि:",
-    inv_thankyou_note:"🌾 किसानों का समर्थन करने हेतु धन्यवाद!", btn_print_invoice:"प्रिंट",
+    inv_thankyou_note:"🌾 विक्रेताओं का समर्थन करने हेतु धन्यवाद!", btn_print_invoice:"प्रिंट",
     btn_close:"बंद", cat_all:"सभी", cat_grains:"अनाज", cat_dairy:"घी व शहद",
     cat_vegetables:"सब्ज़ी", cat_fruits:"फल", cat_handicrafts:"हस्तशिल्प",
     cat_bamboo:"बांस", cat_pottery:"मिट्टी", cat_other:"अन्य"
@@ -1409,7 +1409,7 @@ function localIntentParser(text) {
   if (t.includes("मंडी") || t.includes("mandi") || t.includes("भाव")) return { action: "navigate", target: "mandi-rates" };
   if (t.includes("मेरे ऑर्डर") || t.includes("my order") || t.includes("खरीदारी")) return { action: "navigate", target: "customer-orders" };
   if (t.includes("बाज़ार") || t.includes("market") || t.includes("दुकान") || t.includes("home")) return { action: "navigate", target: "customer-market" };
-  if (t.includes("किसान डेस्क") || t.includes("seller desk") || t.includes("bechna")) return { action: "navigate", target: "seller-portal" };
+  if (t.includes("विक्रेता डेस्क") || t.includes("seller desk") || t.includes("bechna")) return { action: "navigate", target: "seller-portal" };
   
   // Auth
   if (t.includes("लॉगआउट") || t.includes("logout")) return { action: "logout" };
@@ -1734,7 +1734,7 @@ function navigateTo(viewId) {
       return;
     }
     if (viewId === 'seller-portal' && currentUser.role !== 'seller') {
-      showToast(currentLang === 'hi' ? "किसान खाते से लॉगिन करें।" : "Sign in with a farmer account.", "error");
+      showToast(currentLang === 'hi' ? "विक्रेता खाते से लॉगिन करें।" : "Sign in with a seller account.", "error");
       return;
     }
   }
@@ -1762,7 +1762,7 @@ function handlePortalSwitch(targetPortal) {
   if (targetPortal === 'seller') {
     if (!currentUser) { openAuthModal('login'); return; }
     if (currentUser.role !== 'seller') {
-      showToast(currentLang === 'hi' ? "किसान डेस्क के लिए किसान खाते से लॉगिन करें।" : "Sign in with a farmer account.", "error");
+      showToast(currentLang === 'hi' ? "विक्रेता डेस्क के लिए विक्रेता खाते से लॉगिन करें।" : "Sign in with a seller account.", "error");
       return;
     }
     navigateTo('seller-portal');
@@ -1879,7 +1879,7 @@ function handleAuthLogin(e) {
     document.querySelector(`input[name="login-role"][value="${otherRole}"]`).checked = true;
     handleLoginRoleChange(otherRole);
     showToast(currentLang === 'hi'
-      ? `यह ${otherRole === 'seller' ? 'किसान' : 'ग्राहक'} खाता है। स्वतः वही रोल चुना गया।`
+      ? `यह ${otherRole === 'seller' ? 'विक्रेता' : 'ग्राहक'} खाता है। स्वतः वही रोल चुना गया।`
       : `This is a ${otherRole} account. Role auto-selected.`, "info");
   }
 
@@ -1893,7 +1893,7 @@ function handleAuthLogin(e) {
   setLoggedInUser(found);
   closeAuthModal();
   const accountRole = found.role === 'seller'
-    ? (currentLang === 'hi' ? 'किसान' : 'Seller')
+    ? (currentLang === 'hi' ? 'विक्रेता' : 'Seller')
     : (currentLang === 'hi' ? 'ग्राहक' : 'Customer');
   showToast(`${currentLang === 'hi' ? 'स्वागत है' : 'Welcome'}, ${found.name} • ${accountRole}`);
 
@@ -2011,7 +2011,7 @@ function renderNavAuth() {
   } else {
     const isSeller = currentUser.role === 'seller';
     const initials = currentUser.name.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
-    roleBadge.textContent = isSeller ? (currentLang === 'hi' ? "किसान" : "Seller") : (currentLang === 'hi' ? "ग्राहक" : "Customer");
+    roleBadge.textContent = isSeller ? (currentLang === 'hi' ? "विक्रेता" : "Seller") : (currentLang === 'hi' ? "ग्राहक" : "Customer");
     roleBadge.className = isSeller
       ? "text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full uppercase"
       : "text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-full uppercase";
@@ -2022,7 +2022,7 @@ function renderNavAuth() {
           <span class="w-7 h-7 rounded-full bg-kisan-700 text-white border border-kisan-800 flex items-center justify-center text-[10px] font-black" aria-hidden="true">${initials}</span>
           <div class="text-left leading-tight hidden sm:block">
             <div class="text-xs font-black text-stone-900 max-w-[100px] truncate">${currentUser.name.split(' ')[0]}</div>
-            <div class="text-[9px] font-bold ${isSeller ? 'text-amber-800' : 'text-emerald-800'}">${isSeller ? (currentLang === 'hi' ? 'किसान' : 'Farmer') : (currentLang === 'hi' ? 'ग्राहक' : 'Customer')}</div>
+            <div class="text-[9px] font-bold ${isSeller ? 'text-amber-800' : 'text-emerald-800'}">${isSeller ? (currentLang === 'hi' ? 'विक्रेता' : 'Seller') : (currentLang === 'hi' ? 'ग्राहक' : 'Customer')}</div>
           </div>
           <i class="fa-solid fa-chevron-down text-[10px] text-stone-400"></i>
         </button>
@@ -2042,7 +2042,7 @@ function renderNavAuth() {
 
           ${isSeller ? `
             <a href="javascript:void(0)" onclick="navigateTo('seller-portal')" class="flex items-center gap-2 px-3 py-2 text-xs font-bold text-stone-700 hover:bg-stone-50">
-              <i class="fa-solid fa-tractor text-stone-600"></i> ${currentLang === 'hi' ? 'किसान डैशबोर्ड' : 'Seller Dashboard'}
+              <i class="fa-solid fa-tractor text-stone-600"></i> ${currentLang === 'hi' ? 'विक्रेता डैशबोर्ड' : 'Seller Dashboard'}
             </a>
           ` : ''}
 
@@ -2545,7 +2545,7 @@ function showSellerNotifyPanel(sellerMap) {
     <div class="flex items-center justify-between mb-2">
       <div class="text-xs font-black text-stone-900 flex items-center gap-1.5">
         <i class="fa-brands fa-whatsapp text-emerald-600"></i>
-        ${currentLang === 'hi' ? 'किसानों को सूचित करें' : 'Notify Sellers'}
+        ${currentLang === 'hi' ? 'विक्रेताओं को सूचित करें' : 'Notify Sellers'}
       </div>
       <button onclick="this.closest('.seller-notify-panel').remove()" class="text-stone-400 hover:text-stone-700 text-sm" aria-label="Close">
         <i class="fa-solid fa-xmark"></i>
@@ -2553,7 +2553,7 @@ function showSellerNotifyPanel(sellerMap) {
     </div>
     <p class="text-[10px] text-stone-500 mb-2">
       ${currentLang === 'hi'
-        ? 'प्रत्येक किसान को उनका ऑर्डर भेजें। ब्राउज़र सुरक्षा के कारण हर बटन अलग से दबाएँ।'
+        ? 'प्रत्येक विक्रेता को उनका ऑर्डर भेजें। ब्राउज़र सुरक्षा के कारण हर बटन अलग से दबाएँ।'
         : 'Send each seller their order. Browsers block multi-tab opens, so click each button.'}
     </p>
     <div class="space-y-2">
@@ -2888,7 +2888,7 @@ function updateOrderStatus(orderId, newStatus) {
 function openProductCrudModal() {
   if (!currentUser) { openAuthModal('login'); return; }
   if (currentUser.role !== 'seller') {
-    showToast(currentLang === 'hi' ? "केवल किसान उत्पाद जोड़ सकते हैं।" : "Only sellers can add products.", "error");
+    showToast(currentLang === 'hi' ? "केवल विक्रेता उत्पाद जोड़ सकते हैं।" : "Only sellers can add products.", "error");
     return;
   }
   document.getElementById('crud-product-id').value = '';
