@@ -35,6 +35,11 @@
     .animate-mandi-marquee:hover { animation-play-state:paused; }
     .no-scrollbar::-webkit-scrollbar { display:none; }
     .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 0; } }
+    .ai-listening::before {
+      content: ''; position: absolute; inset: -4px; border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.4); animation: pulse-ring 1.5s infinite;
+    }
     @media print {
       body * { visibility:hidden !important; }
       #printable-invoice-area, #printable-invoice-area * { visibility:visible !important; }
@@ -51,6 +56,16 @@
 <body class="bg-stone-50 text-stone-800 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-200">
 
 <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none"></div>
+
+<!-- AI VOICE ASSISTANT FLOATING BUTTON -->
+<div class="fixed bottom-6 right-6 z-[9990] flex flex-col items-end gap-2">
+  <div id="ai-voice-hint" class="hidden bg-stone-900 text-white text-[10px] px-3 py-1.5 rounded-xl shadow-lg mb-1 max-w-[200px] text-center">
+    Try: "मुझे गेहूं दिखाओ"
+  </div>
+  <button id="ai-voice-btn" onclick="toggleVoiceAssistant()" class="relative w-14 h-14 rounded-full bg-gradient-to-tr from-kisan-700 to-emerald-500 text-white shadow-2xl flex items-center justify-center text-xl hover:scale-105 transition active:scale-95">
+    <i id="ai-voice-icon" class="fa-solid fa-microphone"></i>
+  </button>
+</div>
 
 <!-- 1. MANDI TICKER -->
 <div class="bg-stone-900 text-amber-200 text-xs py-2 px-3 border-b border-amber-900/40 sticky top-0 z-50 flex items-center justify-between overflow-hidden shadow-xs">
@@ -733,6 +748,9 @@
         <label class="block text-xs font-bold text-stone-700 mb-1" data-i18n="lbl_description">Description *</label>
         <textarea id="crud-desc" rows="3" required placeholder="Crop variety, harvest date..."
                   class="w-full px-3 py-2 text-xs border border-stone-300 rounded-xl"></textarea>
+        <button type="button" onclick="enhanceDescriptionWithAI()" class="mt-1.5 text-[10px] text-kisan-700 font-bold flex items-center gap-1 hover:underline">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI Enhance Description
+        </button>
       </div>
 
       <div class="flex items-center gap-2 pt-1">
@@ -938,6 +956,14 @@
 <!-- APPLICATION LOGIC                                              -->
 <!-- ============================================================== -->
 <script>
+// =========================================================
+// AI CONFIGURATION
+// =========================================================
+// Paste your xAI Grok API Key here (get it from console.x.ai)
+// Leave empty "" to use the offline fallback (voice + regex will still work)
+const GROK_API_KEY = ""; 
+const GROK_MODEL = "grok-4"; // or grok-3
+
 const i18n = {
   en: {
     app_tagline:"Direct Rural Produce, Vedic Desi Ghee & Tribal Crafts",
@@ -1214,6 +1240,202 @@ let filterRegion = '';
 let filterBadge = '';
 let filterSearch = '';
 let filterSort = 'featured';
+
+/* ================= AI ENGINE (Voice + Grok) ================= */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isListening = false;
+
+function initSpeech() {
+  if (!SpeechRecognition) {
+    console.warn("Speech Recognition not supported in this browser.");
+    return false;
+  }
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('ai-voice-btn').classList.add('ai-listening');
+    document.getElementById('ai-voice-icon').className = 'fa-solid fa-spinner fa-spin';
+    document.getElementById('ai-voice-hint').classList.remove('hidden');
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    console.log("Voice Input:", transcript);
+    document.getElementById('ai-voice-hint').textContent = transcript;
+    processVoiceIntent(transcript);
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech Error:", event.error);
+    resetVoiceUI();
+  };
+
+  recognition.onend = () => {
+    resetVoiceUI();
+  };
+  return true;
+}
+
+function resetVoiceUI() {
+  isListening = false;
+  document.getElementById('ai-voice-btn').classList.remove('ai-listening');
+  document.getElementById('ai-voice-icon').className = 'fa-solid fa-microphone';
+  setTimeout(() => document.getElementById('ai-voice-hint').classList.add('hidden'), 3000);
+}
+
+function toggleVoiceAssistant() {
+  if (!recognition) {
+    if (!initSpeech()) {
+      showToast(currentLang === 'hi' ? "आपका ब्राउज़र वॉइस सपोर्ट नहीं करता।" : "Browser does not support voice.", "error");
+      return;
+    }
+  }
+  if (isListening) {
+    recognition.stop();
+  } else {
+    recognition.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+    recognition.start();
+  }
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+  utter.rate = 0.9;
+  window.speechSynthesis.speak(utter);
+}
+
+// Local Fallback Intent Engine (if Grok API is not configured)
+function localIntentParser(text) {
+  const t = text.toLowerCase();
+  if (t.includes("गेहूं") || t.includes("wheat")) return { action: "search", query: "wheat" };
+  if (t.includes("घी") || t.includes("ghee")) return { action: "search", query: "ghee" };
+  if (t.includes("शहद") || t.includes("honey")) return { action: "search", query: "honey" };
+  if (t.includes("मंडी") || t.includes("mandi") || t.includes("भाव") || t.includes("rate")) return { action: "navigate", target: "mandi-rates" };
+  if (t.includes("ऑर्डर") || t.includes("order") || t.includes("खरीदारी")) return { action: "navigate", target: "customer-orders" };
+  if (t.includes("बाज़ार") || t.includes("market") || t.includes("दुकान")) return { action: "navigate", target: "customer-market" };
+  if (t.includes("कार्ट") || t.includes("cart") || t.includes("टोकरी")) return { action: "cart" };
+  if (t.includes("किसान") || t.includes("seller") || t.includes("bechna")) return { action: "navigate", target: "seller-portal" };
+  return { action: "unknown", text };
+}
+
+async function processVoiceIntent(text) {
+  let intent = null;
+
+  // 1. Try Grok API if key is set
+  if (GROK_API_KEY) {
+    try {
+      const systemPrompt = `You are an AI assistant for Gram Bajar, a rural marketplace. 
+The user speaks in Hindi or English. Analyze their intent and return ONLY a JSON object.
+Possible actions: 
+- {"action":"search", "query":"wheat"} 
+- {"action":"navigate", "target":"mandi-rates" | "customer-orders" | "customer-market" | "seller-portal"}
+- {"action":"cart"}
+- {"action":"unknown", "text":"..."}
+If the user says something like "buy wheat" or "show me ghee", use search. 
+If they say "show rates" or "mandi bhav", use navigate to mandi-rates.
+User said: "${text}"`;
+
+      const res = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROK_API_KEY}` },
+        body: JSON.stringify({
+          model: GROK_MODEL,
+          messages: [{ role: "user", content: systemPrompt }],
+          temperature: 0.1,
+          response_format: { type: "json_object" }
+        })
+      });
+      const data = await res.json();
+      if (data.choices && data.choices[0]) {
+        intent = JSON.parse(data.choices[0].message.content);
+      }
+    } catch (e) { console.warn("Grok API failed, using local fallback", e); }
+  }
+
+  // 2. Fallback to local parser
+  if (!intent) intent = localIntentParser(text);
+
+  // 3. Execute Intent
+  if (intent.action === "search") {
+    handleMarketSearch(intent.query);
+    speak(currentLang === 'hi' ? `${intent.query} दिखा रहा हूँ` : `Showing results for ${intent.query}`);
+    if (currentPortal !== 'customer') navigateTo('customer-market');
+    else scrollToMarketProducts();
+  } 
+  else if (intent.action === "navigate") {
+    navigateTo(intent.target);
+    speak(currentLang === 'hi' ? `खोल रहा हूँ` : `Opening page`);
+  } 
+  else if (intent.action === "cart") {
+    toggleCartDrawer(true);
+    speak(currentLang === 'hi' ? `आपकी टोकरी` : `Your cart`);
+  } 
+  else {
+    speak(currentLang === 'hi' ? `क्षमा करें, मैं समझ नहीं पाया` : `Sorry, I didn't understand that`);
+  }
+}
+
+// AI Description Enhancer (Uses Grok if key exists, else fallback)
+async function enhanceDescriptionWithAI() {
+  const descField = document.getElementById('crud-desc');
+  const titleField = document.getElementById('crud-title');
+  const currentText = descField.value.trim();
+  
+  if (!currentText) {
+    showToast(currentLang === 'hi' ? "पहले कुछ विवरण लिखें।" : "Write something first.", "error");
+    return;
+  }
+
+  const btn = event.target;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enhancing...';
+  btn.disabled = true;
+
+  let enhanced = currentText;
+
+  if (GROK_API_KEY) {
+    try {
+      const prompt = `Rewrite this product description for an Indian rural marketplace (Gram Bajar). Make it sound appealing, mention organic/farm-fresh qualities if applicable. Provide the output in both English and Hindi separated by a newline.
+Product Title: ${titleField.value || "Unknown"}
+Raw Description: ${currentText}
+
+Format: 
+English: [your English description]
+Hindi: [your Hindi description]`;
+
+      const res = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROK_API_KEY}` },
+        body: JSON.stringify({
+          model: GROK_MODEL,
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7
+        })
+      });
+      const data = await res.json();
+      if (data.choices && data.choices[0]) enhanced = data.choices[0].message.content;
+    } catch (e) {
+      console.warn("Grok Enhance failed", e);
+      enhanced = `English: Fresh ${titleField.value || "product"} from our village farm.\nHindi: हमारे गाँव के खेत से ताज़ा ${titleField.value || "उत्पाद"}।`;
+    }
+  } else {
+    // Local Fallback
+    enhanced = `English: Fresh ${titleField.value || "product"} directly from our village farm. 100% natural and organic.\nHindi: हमारे गाँव के खेत से सीधे ताज़ा ${titleField.value || "उत्पाद"}। 100% प्राकृतिक और जैविक।`;
+  }
+
+  descField.value = enhanced;
+  btn.innerHTML = originalText;
+  btn.disabled = false;
+  showToast(currentLang === 'hi' ? "विवरण AI द्वारा सुधारा गया!" : "Description enhanced by AI!");
+}
 
 /* ================= PHONE NORMALIZATION ================= */
 function normalizePhone(raw) {
@@ -1860,6 +2082,7 @@ function handleQuickAddToCart(productId) {
   JsonDB.write(JSON_DB_KEYS.CART, cart);
   updateCartDrawer();
   showToast(`${currentLang === 'hi' ? 'टोकरी में जोड़ा' : 'Added to cart'}: ${currentLang === 'hi' ? prod.title_hi : prod.title_en}`);
+  speak(currentLang === 'hi' ? 'टोकरी में जोड़ा गया' : 'Added to cart');
 }
 
 function updateCartDrawer() {
