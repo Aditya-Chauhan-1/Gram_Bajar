@@ -40,6 +40,11 @@
       content: ''; position: absolute; inset: -4px; border-radius: 9999px;
       background: rgba(16, 185, 129, 0.4); animation: pulse-ring 1.5s infinite;
     }
+    /* Chat UI Styles */
+    #ai-chat-window { transition: all 0.3s ease; transform-origin: bottom right; }
+    .chat-bubble-bot { background: #f3f4f6; border-radius: 12px 12px 12px 2px; border: 1px solid #e5e7eb; }
+    .chat-bubble-user { background: #15803d; color: white; border-radius: 12px 12px 2px 12px; }
+    
     @media print {
       body * { visibility:hidden !important; }
       #printable-invoice-area, #printable-invoice-area * { visibility:visible !important; }
@@ -57,13 +62,53 @@
 
 <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none"></div>
 
-<!-- AI VOICE ASSISTANT FLOATING BUTTON -->
-<div class="fixed bottom-6 right-6 z-[9990] flex flex-col items-end gap-2">
-  <div id="ai-voice-hint" class="hidden bg-stone-900 text-white text-[10px] px-3 py-1.5 rounded-xl shadow-lg mb-1 max-w-[200px] text-center">
-    Try: "मुझे गेहूं दिखाओ"
+<!-- AI CHATBOT UI -->
+<div id="ai-chat-window" class="fixed bottom-24 right-6 z-[9990] w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden hidden" style="max-height: 550px; height: 70vh;">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-kisan-800 to-stone-900 p-3 flex items-center justify-between text-white shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+        <i class="fa-solid fa-robot"></i>
+      </div>
+      <div>
+        <h3 class="text-xs font-bold">Gram Bajar AI</h3>
+        <p class="text-[9px] text-stone-300">Always here to help</p>
+      </div>
+    </div>
+    <button onclick="toggleAIChat()" class="text-stone-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
   </div>
-  <button id="ai-voice-btn" onclick="toggleVoiceAssistant()" class="relative w-14 h-14 rounded-full bg-gradient-to-tr from-kisan-700 to-emerald-500 text-white shadow-2xl flex items-center justify-center text-xl hover:scale-105 transition active:scale-95">
-    <i id="ai-voice-icon" class="fa-solid fa-microphone"></i>
+  
+  <!-- Chat Messages -->
+  <div id="ai-chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3 bg-stone-50 text-xs">
+    <!-- Welcome Message -->
+    <div class="flex items-start gap-2">
+      <div class="w-6 h-6 rounded-full bg-kisan-100 text-kisan-700 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-robot text-[10px]"></i></div>
+      <div class="chat-bubble-bot p-2.5 text-stone-700">
+        Namaste! I am your AI assistant. You can speak or type. Try:<br>
+        • "Show me wheat"<br>
+        • "2 किलो घी टोकरी में डालो"<br>
+        • "Cancel order GB-123"<br>
+        • "मंडी भाव खोलो"
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="p-2 border-t border-stone-200 bg-white flex items-center gap-1.5 shrink-0">
+    <button onclick="toggleVoiceAssistant()" id="ai-voice-btn" class="relative w-8 h-8 rounded-full bg-stone-100 text-stone-600 flex items-center justify-center hover:bg-stone-200 transition">
+      <i id="ai-voice-icon" class="fa-solid fa-microphone text-[11px]"></i>
+    </button>
+    <input type="text" id="ai-chat-input" onkeypress="if(event.key === 'Enter') sendAIChatMessage()" placeholder="Ask me anything..." class="flex-1 px-2 py-1.5 bg-stone-100 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-kisan-500">
+    <button onclick="sendAIChatMessage()" class="w-8 h-8 rounded-full bg-kisan-700 text-white flex items-center justify-center hover:bg-kisan-800 transition">
+      <i class="fa-solid fa-paper-plane text-[11px]"></i>
+    </button>
+  </div>
+</div>
+
+<!-- FLOATING AI TOGGLE BUTTON -->
+<div class="fixed bottom-6 right-6 z-[9995]">
+  <button onclick="toggleAIChat()" class="w-14 h-14 rounded-full bg-gradient-to-tr from-kisan-700 to-emerald-500 text-white shadow-2xl flex items-center justify-center text-xl hover:scale-105 transition active:scale-95">
+    <i class="fa-solid fa-comment-dots"></i>
   </button>
 </div>
 
@@ -959,10 +1004,8 @@
 // =========================================================
 // AI CONFIGURATION
 // =========================================================
-// Paste your Groq API Key here. (Get it from console.groq.com)
-// Leave empty "" to use the offline fallback (voice + regex will still work)
 const GROK_API_KEY = "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"; 
-const GROK_MODEL = "openai/gpt-oss-120b"; 
+const GROK_MODEL = "llama-3.3-70b-versatile"; 
 const GROK_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 const i18n = {
@@ -1242,10 +1285,48 @@ let filterBadge = '';
 let filterSearch = '';
 let filterSort = 'featured';
 
-/* ================= AI ENGINE (Voice + Grok) ================= */
+/* ================= AI ENGINE (Voice + Chat + Grok) ================= */
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let isListening = false;
+let chatOpen = false;
+
+function toggleAIChat() {
+  chatOpen = !chatOpen;
+  const win = document.getElementById('ai-chat-window');
+  if (chatOpen) {
+    win.classList.remove('hidden');
+    setTimeout(() => document.getElementById('ai-chat-input').focus(), 100);
+  } else {
+    win.classList.add('hidden');
+  }
+}
+
+function addChatMessage(sender, text, htmlContent = null) {
+  const container = document.getElementById('ai-chat-messages');
+  const msgDiv = document.createElement('div');
+  
+  if (sender === 'bot') {
+    msgDiv.className = 'flex items-start gap-2';
+    msgDiv.innerHTML = `
+      <div class="w-6 h-6 rounded-full bg-kisan-100 text-kisan-700 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-robot text-[10px]"></i></div>
+      <div class="chat-bubble-bot p-2.5 text-stone-700 max-w-[85%]">
+        ${text}
+        ${htmlContent ? `<div class="mt-2">${htmlContent}</div>` : ''}
+      </div>
+    `;
+  } else {
+    msgDiv.className = 'flex items-start justify-end gap-2';
+    msgDiv.innerHTML = `
+      <div class="chat-bubble-user p-2.5 max-w-[85%]">
+        ${text}
+      </div>
+    `;
+  }
+  
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
 
 function initSpeech() {
   if (!SpeechRecognition) {
@@ -1261,19 +1342,18 @@ function initSpeech() {
     isListening = true;
     document.getElementById('ai-voice-btn').classList.add('ai-listening');
     document.getElementById('ai-voice-icon').className = 'fa-solid fa-spinner fa-spin';
-    document.getElementById('ai-voice-hint').classList.remove('hidden');
   };
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
-    console.log("Voice Input:", transcript);
-    document.getElementById('ai-voice-hint').textContent = transcript;
+    addChatMessage('user', transcript);
     processVoiceIntent(transcript);
   };
 
   recognition.onerror = (event) => {
     console.error("Speech Error:", event.error);
     resetVoiceUI();
+    addChatMessage('bot', "Sorry, I couldn't hear that. Please try again or type.");
   };
 
   recognition.onend = () => {
@@ -1285,8 +1365,7 @@ function initSpeech() {
 function resetVoiceUI() {
   isListening = false;
   document.getElementById('ai-voice-btn').classList.remove('ai-listening');
-  document.getElementById('ai-voice-icon').className = 'fa-solid fa-microphone';
-  setTimeout(() => document.getElementById('ai-voice-hint').classList.add('hidden'), 3000);
+  document.getElementById('ai-voice-icon').className = 'fa-solid fa-microphone text-[11px]';
 }
 
 function toggleVoiceAssistant() {
@@ -1309,39 +1388,107 @@ function speak(text) {
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
-  utter.rate = 0.9;
+  utter.rate = 0.95;
   window.speechSynthesis.speak(utter);
 }
 
-// Local Fallback Intent Engine (if Grok API is not configured)
+function sendAIChatMessage() {
+  const input = document.getElementById('ai-chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addChatMessage('user', text);
+  processVoiceIntent(text);
+}
+
+// Advanced Local Intent Parser (Used as fallback or when AI fails)
 function localIntentParser(text) {
   const t = text.toLowerCase();
+  
+  // Navigation
+  if (t.includes("मंडी") || t.includes("mandi") || t.includes("भाव")) return { action: "navigate", target: "mandi-rates" };
+  if (t.includes("मेरे ऑर्डर") || t.includes("my order") || t.includes("खरीदारी")) return { action: "navigate", target: "customer-orders" };
+  if (t.includes("बाज़ार") || t.includes("market") || t.includes("दुकान") || t.includes("home")) return { action: "navigate", target: "customer-market" };
+  if (t.includes("किसान डेस्क") || t.includes("seller desk") || t.includes("bechna")) return { action: "navigate", target: "seller-portal" };
+  
+  // Auth
+  if (t.includes("लॉगआउट") || t.includes("logout")) return { action: "logout" };
+  if (t.includes("लॉगिन") || t.includes("login")) return { action: "login" };
+
+  // Cart Actions
+  if (t.includes("चेकआउट") || t.includes("checkout") || t.includes("खरीदना है")) return { action: "checkout" };
+  if (t.includes("कार्ट") || t.includes("cart") || t.includes("टोकरी खोलो")) return { action: "open_cart" };
+  
+  // Order Cancel
+  const cancelMatch = t.match(/gb-\d+/i);
+  if ((t.includes("कैंसिल") || t.includes("cancel")) && cancelMatch) {
+    return { action: "cancel_order", order_id: cancelMatch[0] };
+  }
+
+  // Update Status
+  const statusMatch = t.match(/gb-\d+/i);
+  if (statusMatch && (t.includes("शिप") || t.includes("shipped") || t.includes("डिलीवर") || t.includes("delivered"))) {
+    let status = "Shipped";
+    if (t.includes("डिलीवर") || t.includes("delivered")) status = "Delivered";
+    return { action: "update_order", order_id: statusMatch[0], status: status };
+  }
+
+  // Add to cart (Simple regex)
+  if (t.includes("जोड़ो") || t.includes("add") || t.includes("खरीदो") || t.includes("buy")) {
+    let qty = 1;
+    const qtyMatch = t.match(/\d+/);
+    if (qtyMatch) qty = parseInt(qtyMatch[0]);
+    
+    if (t.includes("गेहूं") || t.includes("wheat")) return { action: "add_cart", query: "wheat", qty };
+    if (t.includes("घी") || t.includes("ghee")) return { action: "add_cart", query: "ghee", qty };
+    if (t.includes("शहद") || t.includes("honey")) return { action: "add_cart", query: "honey", qty };
+    if (t.includes("बांस") || t.includes("bamboo")) return { action: "add_cart", query: "bamboo", qty };
+  }
+  
+  // Remove from cart
+  if (t.includes("हटाओ") || t.includes("remove")) {
+    if (t.includes("गेहूं") || t.includes("wheat")) return { action: "remove_cart", query: "wheat" };
+    if (t.includes("घी") || t.includes("ghee")) return { action: "remove_cart", query: "ghee" };
+  }
+
+  // Filter
+  if (t.includes("जैविक") || t.includes("organic")) return { action: "filter", type: "organic" };
+  if (t.includes("gi") || t.includes("जीआई")) return { action: "filter", type: "gi_tag" };
+
+  // Search
   if (t.includes("गेहूं") || t.includes("wheat")) return { action: "search", query: "wheat" };
   if (t.includes("घी") || t.includes("ghee")) return { action: "search", query: "ghee" };
-  if (t.includes("शहद") || t.includes("honey")) return { action: "search", query: "honey" };
-  if (t.includes("मंडी") || t.includes("mandi") || t.includes("भाव") || t.includes("rate")) return { action: "navigate", target: "mandi-rates" };
-  if (t.includes("ऑर्डर") || t.includes("order") || t.includes("खरीदारी")) return { action: "navigate", target: "customer-orders" };
-  if (t.includes("बाज़ार") || t.includes("market") || t.includes("दुकान")) return { action: "navigate", target: "customer-market" };
-  if (t.includes("कार्ट") || t.includes("cart") || t.includes("टोकरी")) return { action: "cart" };
-  if (t.includes("किसान") || t.includes("seller") || t.includes("bechna")) return { action: "navigate", target: "seller-portal" };
+  
   return { action: "unknown", text };
 }
 
 async function processVoiceIntent(text) {
   let intent = null;
+  let aiReply = null;
 
-  // 1. Try Grok API if key is set
+  // 1. Try Grok API (If key is provided and works)
   if (GROK_API_KEY) {
     try {
       const systemPrompt = `You are an AI assistant for Gram Bajar, a rural marketplace. 
 The user speaks in Hindi or English. Analyze their intent and return ONLY a JSON object.
 Possible actions: 
 - {"action":"search", "query":"wheat"} 
+- {"action":"add_cart", "query":"wheat", "qty": 2}
+- {"action":"remove_cart", "query":"wheat"}
 - {"action":"navigate", "target":"mandi-rates" | "customer-orders" | "customer-market" | "seller-portal"}
-- {"action":"cart"}
+- {"action":"open_cart"}
+- {"action":"checkout"}
+- {"action":"cancel_order", "order_id":"GB-12345-1"}
+- {"action":"update_order", "order_id":"GB-12345-1", "status":"Shipped" | "Delivered"}
+- {"action":"filter", "type":"organic" | "gi_tag"}
+- {"action":"login"}
+- {"action":"logout"}
 - {"action":"unknown", "text":"..."}
-If the user says something like "buy wheat" or "show me ghee", use search. 
-If they say "show rates" or "mandi bhav", use navigate to mandi-rates.
+You must also provide a short, friendly "reply" string in Hindi or English to show to the user.
+Format: {"action":"...", "reply":"...", ...other params}
+
+If user says "Add 2 kg wheat to cart", return add_cart with query "wheat" and qty 2.
+If user says "Cancel order GB-123", return cancel_order.
 User said: "${text}"`;
 
       const res = await fetch(GROK_API_URL, {
@@ -1356,35 +1503,128 @@ User said: "${text}"`;
       });
       const data = await res.json();
       if (data.choices && data.choices[0]) {
-        intent = JSON.parse(data.choices[0].message.content);
+        const parsed = JSON.parse(data.choices[0].message.content);
+        intent = parsed;
+        aiReply = parsed.reply;
       }
     } catch (e) { console.warn("Grok API failed, using local fallback", e); }
   }
 
   // 2. Fallback to local parser
-  if (!intent) intent = localIntentParser(text);
+  if (!intent) {
+    intent = localIntentParser(text);
+    
+    // Generate local reply
+    if (intent.action === "search") aiReply = currentLang === 'hi' ? `मैं आपके लिए "${intent.query}" खोज रहा हूँ।` : `Searching for "${intent.query}".`;
+    else if (intent.action === "navigate") aiReply = currentLang === 'hi' ? `पेज खोल रहा हूँ।` : `Opening the page.`;
+    else if (intent.action === "cart") aiReply = currentLang === 'hi' ? `टोकरी खोल रहा हूँ।` : `Opening your cart.`;
+    else if (intent.action === "checkout") aiReply = currentLang === 'hi' ? `चेकआउट शुरू कर रहा हूँ।` : `Starting checkout.`;
+    else aiReply = currentLang === 'hi' ? `मैं समझ गया।` : `I understood that.`;
+  }
+
+  // Show reply in Chat
+  addChatMessage('bot', aiReply || "Done!");
+  if (aiReply) speak(aiReply);
 
   // 3. Execute Intent
   if (intent.action === "search") {
     handleMarketSearch(intent.query);
-    speak(currentLang === 'hi' ? `${intent.query} दिखा रहा हूँ` : `Showing results for ${intent.query}`);
     if (currentPortal !== 'customer') navigateTo('customer-market');
     else scrollToMarketProducts();
+    
+    // Show Product Cards in Chat
+    const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
+    const matches = products.filter(p => (p.title_en||'').toLowerCase().includes(intent.query.toLowerCase()) || (p.title_hi||'').includes(intent.query)).slice(0, 3);
+    
+    if (matches.length > 0) {
+      let cardsHtml = `<div class="flex flex-col gap-2 mt-2">`;
+      matches.forEach(p => {
+        const title = currentLang === 'hi' ? (p.title_hi || p.title_en) : (p.title_en || p.title_hi);
+        cardsHtml += `
+          <div class="bg-white p-2 rounded-xl border border-stone-200 flex items-center gap-2 shadow-xs cursor-pointer hover:bg-stone-50" onclick="handleQuickAddToCart(${p.id}); addChatMessage('bot', '${currentLang === 'hi' ? 'टोकरी में जोड़ दिया गया!' : 'Added to cart!'}');">
+            <img src="${p.image}" class="w-10 h-10 rounded-lg object-cover">
+            <div class="flex-1">
+              <h4 class="text-[11px] font-bold text-stone-800 leading-tight">${title}</h4>
+              <span class="text-[10px] font-black text-kisan-700">₹${p.price}/${p.unit}</span>
+            </div>
+            <div class="w-7 h-7 rounded-full bg-kisan-100 text-kisan-700 flex items-center justify-center"><i class="fa-solid fa-plus text-[10px]"></i></div>
+          </div>
+        `;
+      });
+      cardsHtml += `</div>`;
+      addChatMessage('bot', currentLang === 'hi' ? "यहाँ कुछ उत्पाद हैं जो मुझे मिले:" : "Here are some products I found:", cardsHtml);
+    }
   } 
+  else if (intent.action === "add_cart") {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
+    const prod = products.find(p => (p.title_en||'').toLowerCase().includes(intent.query.toLowerCase()) || (p.title_hi||'').includes(intent.query));
+    if (prod) {
+      const qty = intent.qty || 1;
+      for(let i=0; i<qty; i++) handleQuickAddToCart(prod.id);
+    }
+  }
+  else if (intent.action === "remove_cart") {
+    if (!currentUser) return;
+    const products = JsonDB.read(JSON_DB_KEYS.PRODUCTS);
+    const prod = products.find(p => (p.title_en||'').toLowerCase().includes(intent.query.toLowerCase()) || (p.title_hi||'').includes(intent.query));
+    if (prod && cart.some(c => c.id === prod.id)) {
+      cart = cart.filter(c => c.id !== prod.id);
+      JsonDB.write(JSON_DB_KEYS.CART, cart);
+      updateCartDrawer();
+    }
+  }
   else if (intent.action === "navigate") {
     navigateTo(intent.target);
-    speak(currentLang === 'hi' ? `खोल रहा हूँ` : `Opening page`);
   } 
-  else if (intent.action === "cart") {
+  else if (intent.action === "open_cart") {
     toggleCartDrawer(true);
-    speak(currentLang === 'hi' ? `आपकी टोकरी` : `Your cart`);
   } 
+  else if (intent.action === "checkout") {
+    openCheckoutProcess();
+  }
+  else if (intent.action === "cancel_order") {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const orders = JsonDB.read(JSON_DB_KEYS.ORDERS);
+    const idx = orders.findIndex(o => o.id === intent.order_id && (o.buyerId === currentUser.id || o.sellerId === currentUser.id));
+    if (idx !== -1) {
+      orders[idx].status = "Cancelled";
+      JsonDB.write(JSON_DB_KEYS.ORDERS, orders);
+      showToast(`Order ${intent.order_id} cancelled.`);
+      addChatMessage('bot', `Order ${intent.order_id} has been cancelled.`);
+      if (currentPortal === 'seller') renderSellerDashboard();
+      else renderCustomerOrders();
+    } else {
+      addChatMessage('bot', `Could not find order ${intent.order_id} to cancel.`);
+    }
+  }
+  else if (intent.action === "update_order") {
+    if (!currentUser || currentUser.role !== 'seller') {
+      addChatMessage('bot', "Only sellers can update order status.");
+      return;
+    }
+    updateOrderStatus(intent.order_id, intent.status);
+    addChatMessage('bot', `Order ${intent.order_id} marked as ${intent.status}.`);
+  }
+  else if (intent.action === "filter") {
+    navigateTo('customer-market');
+    filterCategory = 'all';
+    if (intent.type === 'organic') filterBadge = 'organic';
+    else if (intent.type === 'gi_tag') filterBadge = 'gi_tag';
+    renderMarketProducts();
+  }
+  else if (intent.action === "login") {
+    openAuthModal('login');
+  }
+  else if (intent.action === "logout") {
+    logoutUser();
+  }
   else {
-    speak(currentLang === 'hi' ? `क्षमा करें, मैं समझ नहीं पाया` : `Sorry, I didn't understand that`);
+    addChatMessage('bot', currentLang === 'hi' ? "क्षमा करें, मैं समझ नहीं पाया। कृपया फिर से कोशिश करें।" : "Sorry, I didn't understand that. Please try again.");
   }
 }
 
-// AI Description Enhancer (Uses Grok if key exists, else fallback)
+// AI Description Enhancer
 async function enhanceDescriptionWithAI() {
   const descField = document.getElementById('crud-desc');
   const titleField = document.getElementById('crud-title');
@@ -1424,11 +1664,9 @@ Hindi: [your Hindi description]`;
       const data = await res.json();
       if (data.choices && data.choices[0]) enhanced = data.choices[0].message.content;
     } catch (e) {
-      console.warn("Grok Enhance failed", e);
       enhanced = `English: Fresh ${titleField.value || "product"} from our village farm.\nHindi: हमारे गाँव के खेत से ताज़ा ${titleField.value || "उत्पाद"}।`;
     }
   } else {
-    // Local Fallback
     enhanced = `English: Fresh ${titleField.value || "product"} directly from our village farm. 100% natural and organic.\nHindi: हमारे गाँव के खेत से सीधे ताज़ा ${titleField.value || "उत्पाद"}। 100% प्राकृतिक और जैविक।`;
   }
 
