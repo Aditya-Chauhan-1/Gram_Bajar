@@ -959,10 +959,11 @@
 // =========================================================
 // AI CONFIGURATION
 // =========================================================
-// Paste your xAI Grok API Key here (get it from console.x.ai)
+// Paste your Groq API Key here. (Get it from console.groq.com)
 // Leave empty "" to use the offline fallback (voice + regex will still work)
 const GROK_API_KEY = "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"; 
-const GROK_MODEL = "grok-4"; // or grok-3
+const GROK_MODEL = "llama-3.3-70b-versatile"; 
+const GROK_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 const i18n = {
   en: {
@@ -1343,7 +1344,7 @@ If the user says something like "buy wheat" or "show me ghee", use search.
 If they say "show rates" or "mandi bhav", use navigate to mandi-rates.
 User said: "${text}"`;
 
-      const res = await fetch("https://api.x.ai/v1/chat/completions", {
+      const res = await fetch(GROK_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROK_API_KEY}` },
         body: JSON.stringify({
@@ -1411,7 +1412,7 @@ Format:
 English: [your English description]
 Hindi: [your Hindi description]`;
 
-      const res = await fetch("https://api.x.ai/v1/chat/completions", {
+      const res = await fetch(GROK_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROK_API_KEY}` },
         body: JSON.stringify({
