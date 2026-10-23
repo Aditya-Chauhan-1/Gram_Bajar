@@ -196,16 +196,7 @@
   </div>
 </header>
 
-<!-- ROLE STATUS BAR -->
-<div id="role-alert-banner" class="bg-gradient-to-r from-emerald-50 via-amber-50 to-emerald-50 border-b border-emerald-200/80 px-4 py-2 text-xs text-stone-800">
-  <div class="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
-    <div class="flex items-center gap-2">
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
-      <span id="role-banner-text" class="font-bold">Please sign in to continue.</span>
-    </div>
-    <div id="role-banner-action" class="flex items-center gap-2"></div>
-  </div>
-</div>
+<!-- GUEST BANNER REMOVED AS REQUESTED -->
 
 <main class="flex-1">
 
@@ -737,8 +728,11 @@
             <option value="grains" data-i18n="cat_grains">Grains</option>
             <option value="dairy" data-i18n="cat_dairy">Ghee & Honey</option>
             <option value="vegetables" data-i18n="cat_vegetables">Vegetables</option>
+            <option value="fruits" data-i18n="cat_fruits">Fruits</option>
+            <option value="handicrafts" data-i18n="cat_handicrafts">Handicrafts</option>
             <option value="bamboo" data-i18n="cat_bamboo">Bamboo</option>
             <option value="pottery" data-i18n="cat_pottery">Pottery</option>
+            <option value="other" data-i18n="cat_other">Other</option>
           </select>
         </div>
         <div>
@@ -748,6 +742,7 @@
             <option value="Quintal">Per Quintal</option>
             <option value="Litre">Per Litre</option>
             <option value="Piece">Per Piece</option>
+            <option value="Dozen">Per Dozen</option>
           </select>
         </div>
       </div>
@@ -1074,7 +1069,8 @@ const i18n = {
     tbl_qty:"Qty", tbl_amount:"Amount", inv_net_total:"Net Amount:",
     inv_thankyou_note:"🌾 Thank you for supporting farmers!", btn_print_invoice:"Print",
     btn_close:"Close", cat_all:"All", cat_grains:"Grains", cat_dairy:"Ghee & Honey",
-    cat_vegetables:"Vegetables", cat_bamboo:"Bamboo", cat_pottery:"Pottery"
+    cat_vegetables:"Vegetables", cat_fruits:"Fruits", cat_handicrafts:"Handicrafts",
+    cat_bamboo:"Bamboo", cat_pottery:"Pottery", cat_other:"Other"
   },
   hi: {
     app_tagline:"गाँव की सीधी उपज, शुद्ध घी व हस्तशिल्प",
@@ -1141,7 +1137,8 @@ const i18n = {
     tbl_qty:"मात्रा", tbl_amount:"राशि", inv_net_total:"कुल राशि:",
     inv_thankyou_note:"🌾 किसानों का समर्थन करने हेतु धन्यवाद!", btn_print_invoice:"प्रिंट",
     btn_close:"बंद", cat_all:"सभी", cat_grains:"अनाज", cat_dairy:"घी व शहद",
-    cat_vegetables:"सब्ज़ी", cat_bamboo:"बांस", cat_pottery:"मिट्टी"
+    cat_vegetables:"सब्ज़ी", cat_fruits:"फल", cat_handicrafts:"हस्तशिल्प",
+    cat_bamboo:"बांस", cat_pottery:"मिट्टी", cat_other:"अन्य"
   }
 };
 
@@ -1777,37 +1774,23 @@ function handlePortalSwitch(targetPortal) {
 function updatePortalButtons() {
   const btnSeller = document.getElementById('btn-portal-seller');
   const btnCustomer = document.getElementById('btn-portal-customer');
-  const bannerText = document.getElementById('role-banner-text');
-  const bannerAction = document.getElementById('role-banner-action');
   const cartBtn = document.getElementById('nav-cart-btn');
 
   if (!currentUser) {
-    bannerText.textContent = currentLang === 'hi'
-      ? "अतिथि मोड • ऑर्डर करने के लिए लॉगिन करें"
-      : "Guest mode • Sign in to place an order";
-    bannerAction.innerHTML = `<button onclick="openAuthModal('login')" class="px-3 py-1 bg-white border border-emerald-300 rounded-full text-[11px] font-bold text-emerald-800 hover:bg-emerald-50">${currentLang === 'hi' ? 'लॉगिन करें' : 'Sign in'}</button>`;
     btnSeller.classList.add('hidden');
     btnCustomer.classList.add('hidden');
     document.getElementById('btn-nav-my-orders').classList.add('hidden');
     cartBtn.classList.remove('hidden');
   } else if (currentPortal === 'seller') {
-    bannerAction.innerHTML = '';
     btnSeller.className = "inline-flex items-center gap-1 px-1.5 sm:px-3 py-1.5 rounded-full text-xs font-black bg-amber-500 text-stone-900 border border-amber-600 shadow";
     btnCustomer.className = "inline-flex items-center gap-1 px-1.5 sm:px-3 py-1.5 rounded-full text-xs font-bold text-stone-700 bg-stone-100 hover:bg-stone-200 border border-stone-200";
-    bannerText.textContent = currentLang === 'hi'
-      ? `विक्रेता: ${currentUser.name}`
-      : `Seller: ${currentUser.name}`;
     btnSeller.classList.remove('hidden');
     btnCustomer.classList.remove('hidden');
     document.getElementById('btn-nav-my-orders').classList.remove('hidden');
     cartBtn.classList.add('hidden');
   } else {
-    bannerAction.innerHTML = '';
     btnCustomer.className = "inline-flex items-center gap-1 px-1.5 sm:px-3 py-1.5 rounded-full text-xs font-black bg-kisan-700 text-white border border-kisan-800 shadow";
     btnSeller.className = "inline-flex items-center gap-1 px-1.5 sm:px-3 py-1.5 rounded-full text-xs font-bold text-stone-700 bg-stone-100 hover:bg-stone-200 border border-stone-200";
-    bannerText.textContent = currentLang === 'hi'
-      ? `ग्राहक: ${currentUser.name}`
-      : `Customer: ${currentUser.name}`;
     btnSeller.classList.remove('hidden');
     btnCustomer.classList.remove('hidden');
     document.getElementById('btn-nav-my-orders').classList.remove('hidden');
@@ -2093,8 +2076,11 @@ const CATEGORIES = [
   { id:'grains', icon:'fa-wheat-awn', key:'cat_grains' },
   { id:'dairy', icon:'fa-jar', key:'cat_dairy' },
   { id:'vegetables', icon:'fa-apple-whole', key:'cat_vegetables' },
+  { id:'fruits', icon:'fa-lemon', key:'cat_fruits' },
+  { id:'handicrafts', icon:'fa-palette', key:'cat_handicrafts' },
   { id:'bamboo', icon:'fa-tree', key:'cat_bamboo' },
-  { id:'pottery', icon:'fa-mug-hot', key:'cat_pottery' }
+  { id:'pottery', icon:'fa-mug-hot', key:'cat_pottery' },
+  { id:'other', icon:'fa-box', key:'cat_other' }
 ];
 
 function renderCategoryChips() {
@@ -2646,6 +2632,7 @@ function renderCustomerOrders() {
                 order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
                 order.status === 'Shipped' ? 'bg-sky-100 text-sky-800 border border-sky-300' :
                 order.status === 'Packed' ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+                order.status === 'Cancelled' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
                 'bg-amber-100 text-amber-800 border border-amber-300'
               }">● ${order.status}</span>
               <span class="text-[10px] font-bold bg-stone-100 text-stone-700 px-2 py-0.5 rounded-full">${order.paymentMethod}</span>
